@@ -152,15 +152,6 @@ func (img *Image) CreateGrayImage(index int) *image.Gray16 {
 //Creates a RGBA Image
 //This is also used to create an image,
 //in which only red color might be visible and all other colors will be replaced with gray
-//Does not works yet.
-
-// I think one way to do this is
-//Create a grayscale image from original image of same dimension
-//Create a RGBA Image in which all pixels dominated by red are given Their original Red Value(and maybe even amplified a little bit)
-// All other pixels are made transparent.
-//Now Draw create a new RGBA Image
-//And first draw grayscaled image on it, and then draw the Modified RGBA image.
-// I am trying to do that here. But it's not filtering red pixels correctly and also drawing second layer hides first layer even when second image/layer is transparent.
 func (img *Image) CreateRGBAImage() *image.RGBA {
 	colorImage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{img.width, img.height}})
 	grayImage := image.NewGray16(image.Rectangle{image.Point{0, 0}, image.Point{img.width, img.height}})
@@ -179,12 +170,11 @@ func (img *Image) CreateRGBAImage() *image.RGBA {
 			colorImage.SetRGBA(x, y, pixelRGBColor)
 		}
 	}
-
-	//fmt.Println(colorImage.Opaque()) //-> False
-	//fmt.Println(grayImage.Opaque()) //-> True
+	fmt.Println(colorImage.Opaque()) //-> False
+	fmt.Println(grayImage.Opaque()) //-> True
 
 	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{img.width, img.height}}, grayImage, image.Point{0, 0}, draw.Src)
-	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{img.width, img.height}}, colorImage, image.Point{0, 0}, draw.Src)
+	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{img.width, img.height}}, colorImage, image.Point{0, 0}, draw.Over)
 
 	return finalImage
 }
@@ -247,8 +237,9 @@ func Min(a, b uint32) uint32 {
 //TODO: Find better way to get pixels where red color is significantly more visible
 //Make other pixels transparent
 func KeepRedOnly(r, g, b, a uint32) color.RGBA {
-	if r > b && r > g {
-		return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(255)}
+	if !(r > b ) || !(r > g ) {
+		return color.RGBA{uint8(255), uint8(255), uint8(255), uint8(0)}
 	}
-	return color.RGBA{uint8(r), uint8(255), uint8(255), uint8(0)}
+	//avg := BasicImproved(r, g, b)
+	return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}
 }
