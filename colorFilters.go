@@ -29,7 +29,7 @@ func (filter *Filter) ApplyFilter() *image.RGBA {
 			avg := BasicImproved(r, g, b)
 
 			grayColor := color.Gray16{uint16(math.Ceil(avg))}
-			var pixelRGBColor color.RGBA
+			var pixelRGBColor color.RGBA64
 			switch filter.filterType {
 			case "red":
 				pixelRGBColor = redFilter(r, g, b, a)
@@ -40,7 +40,7 @@ func (filter *Filter) ApplyFilter() *image.RGBA {
 			}
 
 			grayImage.SetGray16(x, y, grayColor)
-			colorImage.SetRGBA(x, y, pixelRGBColor)
+			colorImage.Set(x, y, pixelRGBColor)
 		}
 	}
 
@@ -50,25 +50,25 @@ func (filter *Filter) ApplyFilter() *image.RGBA {
 	return finalImage
 }
 
-func redFilter(r, g, b, a uint32) color.RGBA {
+func redFilter(r, g, b, a uint32) color.RGBA64 {
 	if !(r > b ) || !(r > g ) {
-		return color.RGBA{uint8(255), uint8(255), uint8(255), uint8(0)}
+		return color.RGBA64{uint16(255), uint16(255), uint16(255), uint16(0)}
 	}
-	return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}
+	return color.RGBA64{uint16(r), uint16(g), uint16(b), uint16(a)}
 }
 
-func greenFilter(r, g, b, a uint32) color.RGBA {
+func greenFilter(r, g, b, a uint32) color.RGBA64 {
 	if !(g > b ) || !(g > r ) {
-		return color.RGBA{uint8(255), uint8(255), uint8(255), uint8(0)}
+		return color.RGBA64{uint16(255), uint16(255), uint16(255), uint16(0)}
 	}
 	//avg := BasicImproved(r, g, b)
-	return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}
+	return color.RGBA64{uint16(r), uint16(g), uint16(b), uint16(a)}
 }
 
-func blueFilter(r, g, b, a uint32) color.RGBA {
+func blueFilter(r, g, b, a uint32) color.RGBA64 {
 	if !(b > g ) || !(b > r ) {
-		return color.RGBA{uint8(255), uint8(255), uint8(255), uint8(0)}
+		return color.RGBA64{uint16(255), uint16(255), uint16(255), uint16(0)}
 	}
 	//avg := BasicImproved(r, g, b)
-	return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}
+	return color.RGBA64{uint16(r), uint16(g), uint16(b), uint16(a)}
 }

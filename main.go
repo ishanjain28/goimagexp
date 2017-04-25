@@ -43,7 +43,7 @@ func init() {
 
 func main() {
 	img := Image{}
-	choice := 0
+	var choice int
 
 	//Read Metafile
 	//metafile, err := os.Open(".meta.txt")
@@ -59,7 +59,7 @@ func main() {
 
 	//Ask to enter File path
 	fmt.Printf("Enter File Path: ")
-	fmt.Scanf("%s", &img.srcPath)
+	fmt.Scanf("%s\n", &img.srcPath)
 
 	//Open File
 	ipImage, err := os.Open(img.srcPath)
@@ -84,11 +84,12 @@ func main() {
 			innerCount++
 		}
 	}
-	fmt.Printf("Choice(seperated with \" \"): ")
-	fmt.Scanf("%d", &choice)
 
-	if choice > innerCount {
-		log.Fatalln("Invalid Choice")
+	fmt.Printf("Choice: ")
+	fmt.Scanf("%d\n", &choice)
+
+	if choice > innerCount || choice == 0 {
+		log.Fatalln("\nInvalid Choice")
 	}
 	img.ProcessImage(choice)
 
@@ -149,5 +150,7 @@ func (img *Image) ProcessImage(choice int) {
 		filter := Filter{img, "blue"}
 		colorImage = filter.ApplyFilter()
 		img.Save(Options[1][2], colorImage)
+	default:
+		log.Fatalf("%d is an invalid choice", choice)
 	}
 }
