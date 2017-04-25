@@ -2,15 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d04b948c-77ea-4b6e-b946-9baa20540dbe" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/main.go" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/GOPATH__learngo_2.xml" afterPath="$PROJECT_DIR$/.idea/libraries/GOPATH__learngo_2.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/Go_SDK.xml" afterPath="$PROJECT_DIR$/.idea/libraries/Go_SDK.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LICENSE" afterPath="$PROJECT_DIR$/LICENSE" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/colorFilters.go" afterPath="$PROJECT_DIR$/colorFilters.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/grayscale.go" afterPath="$PROJECT_DIR$/grayscale.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils.go" afterPath="$PROJECT_DIR$/utils.go" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/example/ex1.go" afterPath="$PROJECT_DIR$/example/ex1.go" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imagexp.go" afterPath="$PROJECT_DIR$/imagexp.go" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -33,7 +26,7 @@
     <favorites_list name="goimagexp" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.4296875">
+    <splitter split-orientation="horizontal" split-proportion="0.3421875">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="cli.go" pinned="false" current-in-tab="false">
@@ -51,10 +44,10 @@
           <file leaf-file-name="ex1.go" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/example/ex1.go">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="180">
-                  <caret line="10" column="8" lean-forward="false" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
+                <state relative-caret-position="306">
+                  <caret line="17" column="1" lean-forward="true" selection-start-line="17" selection-start-column="1" selection-end-line="17" selection-end-column="1" />
                   <folding>
-                    <element signature="e#14#67#0" expanded="true" />
+                    <element signature="e#14#86#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
@@ -97,8 +90,8 @@
           <file leaf-file-name="imagexp.go" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/imagexp.go">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="712">
-                  <caret line="65" column="38" lean-forward="false" selection-start-line="65" selection-start-column="38" selection-end-line="65" selection-end-column="38" />
+                <state relative-caret-position="396">
+                  <caret line="117" column="82" lean-forward="false" selection-start-line="117" selection-start-column="82" selection-end-line="117" selection-end-column="82" />
                   <folding>
                     <element signature="n#!!block;n#SetDimension#0" expanded="false" />
                     <element signature="n#!!block;n#Save#0" expanded="false" />
@@ -109,6 +102,7 @@
                     <element signature="n#!!block;n#redFilter#0" expanded="false" />
                     <element signature="n#!!block;n#greenFilter#0" expanded="false" />
                     <element signature="n#!!block;n#blueFilter#0" expanded="false" />
+                    <marker date="1493162169482" expanded="false" signature="24:156" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -549,16 +543,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/example/ex1.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="10" column="8" lean-forward="false" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
-          <folding>
-            <element signature="e#14#67#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/grayscale.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="522">
@@ -575,10 +559,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/example/ex1.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="17" column="1" lean-forward="true" selection-start-line="17" selection-start-column="1" selection-end-line="17" selection-end-column="1" />
+          <folding>
+            <element signature="e#14#86#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/imagexp.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="712">
-          <caret line="65" column="38" lean-forward="false" selection-start-line="65" selection-start-column="38" selection-end-line="65" selection-end-column="38" />
+        <state relative-caret-position="396">
+          <caret line="117" column="82" lean-forward="false" selection-start-line="117" selection-start-column="82" selection-end-line="117" selection-end-column="82" />
           <folding>
             <element signature="n#!!block;n#SetDimension#0" expanded="false" />
             <element signature="n#!!block;n#Save#0" expanded="false" />
@@ -589,6 +583,7 @@
             <element signature="n#!!block;n#redFilter#0" expanded="false" />
             <element signature="n#!!block;n#greenFilter#0" expanded="false" />
             <element signature="n#!!block;n#blueFilter#0" expanded="false" />
+            <marker date="1493162169482" expanded="false" signature="24:156" ph="..." />
           </folding>
         </state>
       </provider>

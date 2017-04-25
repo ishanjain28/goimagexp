@@ -3,7 +3,6 @@ package imagexp
 import (
 	"image/color"
 	"image"
-	"io"
 	"path"
 	"image/png"
 	"log"
@@ -11,10 +10,10 @@ import (
 	"image/jpeg"
 	"strings"
 	"os"
-	"math"
 	"image/draw"
 	"fmt"
-	"bufio"
+	"sync"
+	"math"
 )
 
 type Image struct {
@@ -41,6 +40,7 @@ type ColorOptions interface {
 }
 
 var PARTS int = 50
+var wg sync.WaitGroup
 
 const (
 	BASIC            = "basic"
@@ -56,7 +56,9 @@ const (
 	BLUEONLYFILTER   = "blue.only"
 )
 
-func TransformImage(transformationName string, path string) {
+func TransformImage(transformationName string, path string) *image.RGBA64 {
+
+	var finalImage *image.RGBA64
 	//Create a new instance of struct
 	img := &Image{}
 	//Set Path
@@ -66,8 +68,10 @@ func TransformImage(transformationName string, path string) {
 	img.decodedImage = img.Decode()
 	//Set Image Dimension
 	img.SetDimension(img.decodedImage.Bounds().Max.X, img.decodedImage.Bounds().Max.Y)
+	//Print a message about Image Dimension
+	fmt.Printf("Image Resolution: %dx%d\n", img.width, img.height)
 
-	var cImage colorImage
+	//var cImage colorImage
 	//var gImage grayImage
 
 	switch transformationName {
@@ -80,68 +84,59 @@ func TransformImage(transformationName string, path string) {
 	case SINGLEGREEN:
 	case SINGLEBLUE:
 	case REDONLYFILTER:
-		imga := cImage.Create(REDONLYFILTER)
-		fmt.Println(imga)
+		imga := img.Create(REDONLYFILTER)
+
+		outfile, err := os.Create("test.png")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		png.Encode(outfile, imga)
 	case GREENONLYFILTER:
 	case BLUEONLYFILTER:
+		finalImage = img.Create(BLUEONLYFILTER)
+
 	}
+
+	return finalImage
 }
 
-func (cImage colorImage) Create(FilterName string) *image.RGBA64 {
-	fmt.Println(cImage)
+func (cImage Image) Create(FilterName string) *image.RGBA64 {
 	newColorImage := image.NewRGBA64(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 	newGrayImage := image.NewGray16(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
-
 	finalImage := image.NewRGBA64(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 
-	partLimit := cImage.height / PARTS
-	difference := cImage.height % PARTS
+	//rowPerPart := cImage.height / PARTS
+	//remainderRows := cImage.height % PARTS
 
 	switch FilterName {
 	case REDONLYFILTER:
-
-		for j := 0; j < PARTS; j++ {
-			startFromRow := partLimit * j
-			upToRow := partLimit * (j + 1)
-			if j == PARTS-1 {
-				upToRow += difference
-			}
-
-			go cImage.applyTransformation(startFromRow, upToRow, newColorImage, newGrayImage, redFilter)
-		}
-
+		cImage.applyTransformation(newColorImage, newGrayImage, redFilter)
 	case GREENONLYFILTER:
-
-		for j := 0; j < PARTS; j++ {
-			startFromRow := partLimit * j
-			upToRow := partLimit * (j + 1)
-			if j == PARTS-1 {
-				upToRow += difference
-			}
-			go cImage.applyTransformation(startFromRow, upToRow, newColorImage, newGrayImage, redFilter)
-		}
-
+		cImage.applyTransformation(newColorImage, newGrayImage, greenFilter)
 	case BLUEONLYFILTER:
-		for j := 0; j < PARTS; j++ {
-			startFromRow := partLimit * j
-			upToRow := partLimit * (j + 1)
-			if j == PARTS-1 {
-				upToRow += difference
-			}
-			go cImage.applyTransformation(startFromRow, upToRow, newColorImage, newGrayImage, redFilter)
-		}
+		//fmt.Println(rowPerPart, remainderRows)
+		cImage.applyTransformation(newColorImage, newGrayImage, blueFilter)
+		//for j := 0; j < PARTS; j++ {
+		//	wg.Add(1)
+		//	startFromRow := partLimit * j
+		//	upToRow := partLimit * (j + 1)
+		//	if j == PARTS-1 {
+		//		upToRow += difference
+		//	}
+		//	go cImage.applyTransformation(startFromRow, upToRow, newColorImageAddress, newGrayImageAddress, redFilter)
+		//}
 	}
-
+	wg.Wait()
 	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}}, newGrayImage, image.Point{0, 0}, draw.Src)
 	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}}, newColorImage, image.Point{0, 0}, draw.Over)
 
 	return finalImage
 }
 
-func (cImage *colorImage) applyTransformation(startFromRow, upToRow int, colorImage *image.RGBA64, grayImage *image.Gray16, transformationFunction func(r, g, b, a uint32) color.RGBA64) {
-	for i := startFromRow; i <= upToRow; i++ {
-		for j := 0; j <= cImage.width; j++ {
-			point := cImage.decodedImage.At(i, j)
+func (img *Image) applyTransformation(colorImage *image.RGBA64, grayImage *image.Gray16, transformationFunction func(r, g, b, a uint32) color.RGBA64) {
+	for i := 0; i <= img.width; i++ {
+		for j := 0; j <= img.height; j++ {
+			point := img.decodedImage.At(i, j)
 			r, g, b, a := point.RGBA()
 
 			pixelColor := transformationFunction(r, g, b, a)
@@ -153,10 +148,26 @@ func (cImage *colorImage) applyTransformation(startFromRow, upToRow int, colorIm
 	}
 }
 
-func (gImage *grayImage) applyTransformation(x, y int) {
+//func (cImage *Image) applyTransformation(startFromRow, upToRow int, colorImage **image.RGBA64, grayImage **image.Gray16, transformationFunction func(r, g, b, a uint32) color.RGBA64) {
+//	for i := startFromRow; i <= upToRow; i++ {
+//		for j := 0; j <= cImage.width; j++ {
+//			point := cImage.decodedImage.At(i, j)
+//			r, g, b, a := point.RGBA()
+//
+//			pixelColor := transformationFunction(r, g, b, a)
+//			grayAVG := basicImproved(r, g, b)
+//			grayColor := color.Gray16{uint16(math.Ceil(grayAVG))}
+//			(*grayImage).SetGray16(i, j, grayColor)
+//			(*colorImage).SetRGBA64(i, j, pixelColor)
+//		}
+//	}
+//	wg.Done()
+//}
 
-}
-
+//func (gImage *grayImage) applyTransformation(x, y int) {
+//
+//}
+//
 func (gImage grayImage) Create(FilterName string) {
 	switch FilterName {
 	case "basic":
