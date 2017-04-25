@@ -4,11 +4,6 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"path"
-	"os"
-	"log"
-	"image/png"
-	"strings"
 )
 
 //func (img *Image) CreateImages(index int, name string) {
@@ -63,15 +58,15 @@ func (img *Image) CreateGrayImage(index int) *image.Gray16 {
 			// This switch uses different algorithms to create values that'll be used in image
 			switch index {
 			case 0:
-				avg = Basic(r, g, b)
+				avg = basic(r, g, b)
 			case 1:
-				avg = BasicImproved(r, g, b)
+				avg = basicImproved(r, g, b)
 			case 2:
-				avg = Desaturation(r, g, b)
+				avg = desaturation(r, g, b)
 			case 3:
-				avg = float64(MaxOfThree(r, g, b))
+				avg = float64(maxOfThree(r, g, b))
 			case 4:
-				avg = float64(MinOfThree(r, g, b))
+				avg = float64(minOfThree(r, g, b))
 			case 5:
 				avg = float64(r)
 			case 6:
@@ -88,19 +83,22 @@ func (img *Image) CreateGrayImage(index int) *image.Gray16 {
 	return grayImage
 }
 
-func (img *Image) Save(FilterName string, finalImage image.Image) {
-	srcFilename := path.Base(img.srcPath)
-	srcFilename = strings.Replace(srcFilename, path.Ext(img.srcPath), "", -1)
-	//fileExtension := path.Ext(img.srcPath)
-	FilterName = strings.Replace(FilterName, " ", "", -1)
+func basic(r, g, b uint32) float64 {
+	return float64((r + g + b) / 3)
+}
 
-	os.Mkdir("final_Image", 0777)
-	os.Mkdir("final_Image/"+srcFilename, 0777)
-	outfile, err := os.Create("final_Image/" + srcFilename + "/" + FilterName + ".png")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer outfile.Close()
+func basicImproved(r, g, b uint32) float64 {
+	return float64(0.3)*float64(r) + float64(0.59)*float64(g) + float64(0.11)*float64(b)
+}
 
-	png.Encode(outfile, finalImage)
+func desaturation(r, g, b uint32) float64 {
+	return float64(maxOfThree(r, g, b)+minOfThree(r, g, b)) / 2
+}
+
+func maxOfThree(r, g, b uint32) uint32 {
+	return Max(Max(r, g), b)
+}
+
+func minOfThree(r, g, b uint32) uint32 {
+	return Min(Min(r, g), b)
 }
