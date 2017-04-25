@@ -1,45 +1,11 @@
-package main
+package test
 
 import (
-	"sync"
-	"image"
 	"fmt"
 	"os"
 	"log"
+	"image"
 )
-
-var wg sync.WaitGroup
-
-type Image struct {
-	srcPath  string
-	srcImage image.Image
-	width    int
-	height   int
-}
-
-var Options [][]string
-
-var GrayscaleOptions = []string{
-	"Grayscale (Basic)",
-	"Grayscale (Improved yet Basic)",
-	"Grayscale (Desaturated)",
-	"Grayscale (Decomposition (MAX))",
-	"Grayscale (Decomposition (MIN))",
-	"Grayscale (Single Channel (RED))",
-	"Grayscale (Single Channel (GREEN))",
-	"Grayscale (Single Channel (BLUE))",
-}
-
-var FilterOptions = []string{
-	"RED Only Filter",
-	"GREEN Only Filter",
-	"BLUE Only Filter",
-}
-
-func init() {
-	Options = append(Options, GrayscaleOptions)
-	Options = append(Options, FilterOptions)
-}
 
 func main() {
 	img := Image{}
