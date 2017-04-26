@@ -1,8 +1,13 @@
 package imagexp
 
+/*
+1. Performance Boost: Use go routines to access and modify pixels in multiple locations at the same time
+2. Organize code
+3. Add filters.
+ */
+
 import (
 	"image/color"
-	"image"
 	"path"
 	"image/png"
 	"log"
@@ -13,6 +18,7 @@ import (
 	"image/draw"
 	"fmt"
 	"math"
+	"image"
 )
 
 type Image struct {
