@@ -13,11 +13,3 @@ func Min(a, b uint32) uint32 {
 	}
 	return b
 }
-
-//func (img *ImageXP) Set(path string) {
-//	img.path = path
-//}
-//
-//func (img *ImageXP) Get() string {
-//	return img.path
-//}
