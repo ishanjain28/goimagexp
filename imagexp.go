@@ -71,74 +71,52 @@ func TransformImage(transformationName string, path string) image.Image {
 	var gImage grayImage
 
 	switch transformationName {
-
-	//Improve this
 	case BASIC:
 		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(BASIC)
+		finalImage = gImage.Create(basic)
 	case BASICIMPROVED:
 		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(BASICIMPROVED)
+		finalImage = gImage.Create(basicImproved)
 	case DESATURATION:
 		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(DESATURATION)
+		finalImage = gImage.Create(desaturation)
 	case DECOMPOSITIONMAX:
 		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(DECOMPOSITIONMAX)
+		finalImage = gImage.Create(decompositionMax)
 	case DECOMPOSITIONMIN:
 		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(DECOMPOSITIONMIN)
+		finalImage = gImage.Create(decompositionMin)
 	case SINGLERED:
 		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(SINGLERED)
+		finalImage = gImage.Create(singleChannelRed)
 	case SINGLEGREEN:
 		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(SINGLEGREEN)
+		finalImage = gImage.Create(singleChannelGreen)
 	case SINGLEBLUE:
 		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(SINGLEBLUE)
+		finalImage = gImage.Create(singleChannelBlue)
 	case REDONLYFILTER:
 		cImage = colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = cImage.Create(REDONLYFILTER)
+		finalImage = cImage.Create(redFilter)
 	case GREENONLYFILTER:
 		cImage = colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = cImage.Create(GREENONLYFILTER)
+		finalImage = cImage.Create(greenFilter)
 	case BLUEONLYFILTER:
 		cImage = colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = cImage.Create(BLUEONLYFILTER)
-
+		finalImage = cImage.Create(blueFilter)
 	}
 
 	return finalImage.(image.Image)
 }
 
-func (gImage *grayImage) Create(FilterName string) *image.Gray16 {
-
+func (gImage *grayImage) Create(transformationFunction func(r, g, b, a uint32) color.Gray16) *image.Gray16 {
 	newGrayImage := image.NewGray16(image.Rectangle{image.Point{0, 0}, image.Point{gImage.width, gImage.height}})
-	switch FilterName {
-	case BASIC:
-		gImage.applyTransformation(newGrayImage, basic)
-	case BASICIMPROVED:
-		gImage.applyTransformation(newGrayImage, basicImproved)
-	case DESATURATION:
-		gImage.applyTransformation(newGrayImage, desaturation)
-	case DECOMPOSITIONMAX:
-		gImage.applyTransformation(newGrayImage, decompositionMax)
-	case DECOMPOSITIONMIN:
-		gImage.applyTransformation(newGrayImage, decompositionMin)
-	case SINGLERED:
-		gImage.applyTransformation(newGrayImage, singleChannelRed)
-	case SINGLEGREEN:
-		gImage.applyTransformation(newGrayImage, singleChannelGreen)
-	case SINGLEBLUE:
-		gImage.applyTransformation(newGrayImage, singleChannelBlue)
 
-	}
-
+	gImage.applyTransformation(newGrayImage, transformationFunction)
 	return newGrayImage
 }
 
-func (cImage *colorImage) Create(FilterName string) *image.RGBA64 {
+func (cImage *colorImage) Create(transformationFunction func(r, g, b, a uint32) color.RGBA64) *image.RGBA64 {
 	newColorImage := image.NewRGBA64(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 	newGrayImage := image.NewGray16(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 	finalImage := image.NewRGBA64(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
@@ -146,24 +124,18 @@ func (cImage *colorImage) Create(FilterName string) *image.RGBA64 {
 	rowPerPart := cImage.height / PARTS
 	remainderRows := cImage.height % PARTS
 	fmt.Println(rowPerPart, remainderRows)
-	switch FilterName {
-	case REDONLYFILTER:
-		cImage.applyTransformation(newColorImage, newGrayImage, redFilter)
-	case GREENONLYFILTER:
-		cImage.applyTransformation(newColorImage, newGrayImage, greenFilter)
-	case BLUEONLYFILTER:
-		//fmt.Println(rowPerPart, remainderRows)
-		cImage.applyTransformation(newColorImage, newGrayImage, blueFilter)
-		//for j := 0; j < PARTS; j++ {
-		//	wg.Add(1)
-		//	startFromRow := partLimit * j
-		//	upToRow := partLimit * (j + 1)
-		//	if j == PARTS-1 {
-		//		upToRow += difference
-		//	}
-		//	go cImage.applyTransformation(startFromRow, upToRow, newColorImageAddress, newGrayImageAddress, redFilter)
-		//}
-	}
+
+	cImage.applyTransformation(newColorImage, newGrayImage, transformationFunction)
+	//for j := 0; j < PARTS; j++ {
+	//	wg.Add(1)
+	//	startFromRow := partLimit * j
+	//	upToRow := partLimit * (j + 1)
+	//	if j == PARTS-1 {
+	//		upToRow += difference
+	//	}
+	//	go cImage.applyTransformation(startFromRow, upToRow, newColorImageAddress, newGrayImageAddress, redFilter)
+	//}
+
 	//wg.Wait()
 	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}}, newGrayImage, image.Point{0, 0}, draw.Src)
 	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}}, newColorImage, image.Point{0, 0}, draw.Over)
@@ -212,12 +184,12 @@ func (img *Image) Decode() image.Image {
 	var decodedImage image.Image
 
 	switch fileExtension {
-	case ".png":
+	case ".png", ".PNG":
 		decodedImage, err = png.Decode(imageFile)
 		if err != nil {
 			log.Fatalf("Error in decoding png: %s", err)
 		}
-	case ".jpg", ".jpeg":
+	case ".jpg", ".jpeg", ".JPG", ".JPEG":
 		var jpegBuffer bytes.Buffer
 
 		decodedJPEG, err := jpeg.Decode(imageFile)
