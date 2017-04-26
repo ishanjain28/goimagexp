@@ -2,24 +2,42 @@ package main
 
 import (
 	"github.com/ishanjain28/goimagexp"
-	"os"
 	"image/png"
-	"log"
+	"os"
+	"sync"
 )
 
+var wg sync.WaitGroup
+
 func main() {
-
-	//Enter the image path and name of transformation to apply on that image
-	finalImage := imagexp.TransformImage(imagexp.DECOMPOSITIONMAX, "image.jpg")
-
-	// finalImage is of type image.Image
-	//You can use it wherever you want.
-	//Here I am storing it in a file
-	final_file, err := os.Create("final_image.png")
-	if err != nil {
-		log.Fatalf("%s", err)
+	str := []string{
+		imagexp.DESATURATION,
+		imagexp.BASIC,
+		imagexp.BASICIMPROVED,
+		imagexp.SINGLEBLUE,
+		imagexp.SINGLEGREEN,
+		imagexp.SINGLERED,
+		imagexp.REDONLYFILTER,
+		imagexp.GREENONLYFILTER,
+		imagexp.BLUEONLYFILTER,
+		imagexp.DECOMPOSITIONMAX,
+		imagexp.DECOMPOSITIONMIN,
 	}
-	defer final_file.Close()
-	//Encode image.Image into proper png format and store it in final_file
-	png.Encode(final_file, finalImage)
+	for _, v := range str {
+		wg.Add(1)
+		create(v)
+	}
+
+	wg.Wait()
+}
+
+func create(v string) {
+	image := imagexp.TransformImage(v, "image.png")
+
+	file, _ := os.Create(v + ".png")
+
+	defer file.Close()
+
+	png.Encode(file, image)
+	wg.Done()
 }

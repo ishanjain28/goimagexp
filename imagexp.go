@@ -4,21 +4,21 @@ package imagexp
 1. Performance Boost: Use go routines to access and modify pixels in multiple locations at the same time
 2. Organize code
 3. Add filters.
- */
+*/
 
 import (
+	"bytes"
+	"fmt"
+	"image"
 	"image/color"
-	"path"
+	"image/draw"
+	"image/jpeg"
 	"image/png"
 	"log"
-	"bytes"
-	"image/jpeg"
-	"strings"
-	"os"
-	"image/draw"
-	"fmt"
 	"math"
-	"image"
+	"os"
+	"path"
+	"strings"
 )
 
 type Image struct {
@@ -67,30 +67,44 @@ func TransformImage(transformationName string, path string) image.Image {
 	//Print a message about Image Dimension
 	fmt.Printf("Image Resolution: %dx%d\n", img.width, img.height)
 
-	cImage := colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
-	gImage := grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
+	var cImage colorImage
+	var gImage grayImage
+
 	switch transformationName {
+
+	//Improve this
 	case BASIC:
+		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = gImage.Create(BASIC)
 	case BASICIMPROVED:
+		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = gImage.Create(BASICIMPROVED)
 	case DESATURATION:
+		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = gImage.Create(DESATURATION)
 	case DECOMPOSITIONMAX:
+		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = gImage.Create(DECOMPOSITIONMAX)
 	case DECOMPOSITIONMIN:
+		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = gImage.Create(DECOMPOSITIONMIN)
 	case SINGLERED:
+		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = gImage.Create(SINGLERED)
 	case SINGLEGREEN:
+		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = gImage.Create(SINGLEGREEN)
 	case SINGLEBLUE:
+		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = gImage.Create(SINGLEBLUE)
 	case REDONLYFILTER:
+		cImage = colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = cImage.Create(REDONLYFILTER)
 	case GREENONLYFILTER:
+		cImage = colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = cImage.Create(GREENONLYFILTER)
 	case BLUEONLYFILTER:
+		cImage = colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
 		finalImage = cImage.Create(BLUEONLYFILTER)
 
 	}
@@ -129,8 +143,9 @@ func (cImage *colorImage) Create(FilterName string) *image.RGBA64 {
 	newGrayImage := image.NewGray16(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 	finalImage := image.NewRGBA64(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 
-	//rowPerPart := cImage.height / PARTS
-	//remainderRows := cImage.height % PARTS
+	rowPerPart := cImage.height / PARTS
+	remainderRows := cImage.height % PARTS
+	fmt.Println(rowPerPart, remainderRows)
 	switch FilterName {
 	case REDONLYFILTER:
 		cImage.applyTransformation(newColorImage, newGrayImage, redFilter)
