@@ -52,20 +52,26 @@ const (
 	BLUEONLYFILTER   = "blue.only"
 )
 
-func TransformImage(transformationName string, path string) image.Image {
+func TransformImage(transformationName string, ipPath string) (image.Image, error) {
+
 
 	var finalImage interface{}
 	//Create a new instance of struct
 	img := &Image{}
 	//Set Path
-	img.path = path
-
+	img.path = ipPath
 	//Decode
-	img.decodedImage = img.Decode()
+	tempDecodeImage, err := img.Decode()
+	if err != nil {
+		fmt.Println(err)
+			return nil, err
+	}
+	img.decodedImage = tempDecodeImage
+
 	//Set Image Dimension
 	img.SetDimension(img.decodedImage.Bounds().Max.X, img.decodedImage.Bounds().Max.Y)
 	//Print a message about Image Dimension
-	fmt.Printf("Image Resolution: %dx%d\n", img.width, img.height)
+	fmt.Printf("Applying Transformation %s, Image Resolution is %dx%d\n", transformationName, img.width, img.height)
 
 	var cImage colorImage
 	var gImage grayImage
@@ -106,7 +112,7 @@ func TransformImage(transformationName string, path string) image.Image {
 		finalImage = cImage.Create(blueFilter)
 	}
 
-	return finalImage.(image.Image)
+	return finalImage.(image.Image), nil
 }
 
 func (gImage *grayImage) Create(transformationFunction func(r, g, b, a uint32) color.Gray16) *image.Gray16 {
@@ -121,9 +127,9 @@ func (cImage *colorImage) Create(transformationFunction func(r, g, b, a uint32) 
 	newGrayImage := image.NewGray16(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 	finalImage := image.NewRGBA64(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 
-	rowPerPart := cImage.height / PARTS
-	remainderRows := cImage.height % PARTS
-	fmt.Println(rowPerPart, remainderRows)
+	//rowPerPart := cImage.height / PARTS
+	//remainderRows := cImage.height % PARTS
+	//fmt.Println(rowPerPart, remainderRows)
 
 	cImage.applyTransformation(newColorImage, newGrayImage, transformationFunction)
 	//for j := 0; j < PARTS; j++ {
@@ -173,10 +179,11 @@ func (img *Image) SetDimension(width int, height int) {
 	img.height = height
 }
 
-func (img *Image) Decode() image.Image {
+func (img *Image) Decode() (image.Image, error) {
 	imageFile, err := os.Open(img.path)
 	if err != nil {
-		log.Fatalf("Error Occurred in opening file: %s", err)
+		//log.Printf("Error Occurred in opening file: %s", err)
+		return nil, err
 	}
 	defer imageFile.Close()
 
@@ -187,14 +194,16 @@ func (img *Image) Decode() image.Image {
 	case ".png", ".PNG":
 		decodedImage, err = png.Decode(imageFile)
 		if err != nil {
-			log.Fatalf("Error in decoding png: %s", err)
+			//log.Printf("Error in decoding png: %s", err)
+			return nil, err
 		}
 	case ".jpg", ".jpeg", ".JPG", ".JPEG":
 		var jpegBuffer bytes.Buffer
 
 		decodedJPEG, err := jpeg.Decode(imageFile)
 		if err != nil {
-			log.Fatalf("Error in decoding jpeg: %s", err)
+			//log.Printf("Error in decoding jpeg: %s", err)
+			return nil, err
 		}
 
 		png.Encode(&jpegBuffer, decodedJPEG)
@@ -202,11 +211,12 @@ func (img *Image) Decode() image.Image {
 		decodedImage, err = png.Decode(&jpegBuffer)
 
 		if err != nil {
-			log.Fatalf("Error in encoding jpeg to png: %s", err)
+			//log.Printf("Error in encoding jpeg to png: %s", err)
+			return nil, err
 		}
 	}
 
-	return decodedImage
+	return decodedImage, nil
 }
 
 // Use file Extension to idenitfy which decoder to use.
