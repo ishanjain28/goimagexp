@@ -5,25 +5,27 @@ import (
 	"image/png"
 	"log"
 	"os"
+	"fmt"
+	"bufio"
 )
 
 func main() {
 
-	//imgPath := ""
-	//fmt.Printf("Enter Path to Image: ")
+	imgPath := ""
+	fmt.Printf("Enter Path to Image: ")
+	//
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		s := scanner.Text()
 
-	//scanner := bufio.NewScanner(os.Stdin)
-	//for scanner.Scan() {
-	//	s := scanner.Text()
-	//
-	//	imgPath = s
-	//	break
-	//
-	//}
-	//if err := scanner.Err(); err != nil {
-	//	os.Exit(1)
-	//}
-	test, err := imagexp.ColorTransform(imagexp.RedFilter, "image.jpg")
+		imgPath = s
+		break
+
+	}
+	if err := scanner.Err(); err != nil {
+		os.Exit(1)
+	}
+	test, err := imagexp.ColorTransform(imagexp.RedFilter, imgPath)
 	if err != nil {
 		log.Fatal(err)
 	}

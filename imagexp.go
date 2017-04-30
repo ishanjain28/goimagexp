@@ -1,9 +1,8 @@
 package imagexp
 
 /*
-1. Performance Boost: Use go routines to access and modify pixels in multiple locations at the same time
-2. Organize code
-3. Add filters.
+1. Organize code
+2. Add filters.
 */
 
 import (
@@ -40,7 +39,7 @@ type Gray16Transformation func(r, g, b, a uint32) color.Gray16
 
 type RGBATransformation func(r, g, b, a uint32) color.RGBA64
 
-var PARTS int = 500
+var PARTS int = 50
 var wg sync.WaitGroup
 
 func GrayscaleTransform(transformationFunction Gray16Transformation, ipPath string) (*image.Gray16, error) {
