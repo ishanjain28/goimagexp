@@ -8,7 +8,6 @@ package imagexp
 
 import (
 	"bytes"
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -36,93 +35,59 @@ type colorImage struct {
 	Image
 }
 
-var PARTS int = 50
+type Gray16Transformation func(r, g, b, a uint32) color.Gray16
 
-const (
-	BASIC            = "basic"
-	BASICIMPROVED    = "basic.improved"
-	DESATURATION     = "desaturation"
-	DECOMPOSITIONMAX = "decomposition.max"
-	DECOMPOSITIONMIN = "decomposition.min"
-	SINGLERED        = "single.channel.red"
-	SINGLEGREEN      = "single.channel.green"
-	SINGLEBLUE       = "single.channel.blue"
-	REDONLYFILTER    = "red.only"
-	GREENONLYFILTER  = "green.only"
-	BLUEONLYFILTER   = "blue.only"
-)
+type RGBATransformation func(r, g, b, a uint32) color.RGBA64
 
-func TransformImage(transformationName string, ipPath string) (image.Image, error) {
+func GrayscaleTransform(transformationFunction Gray16Transformation, ipPath string) (*image.Gray16, error) {
+	var finalImage *image.Gray16
 
+	img := &Image{}
+	img.path = ipPath
 
-	var finalImage interface{}
-	//Create a new instance of struct
+	tempDecodeImage, err := img.Decode()
+	if err != nil {
+		return nil, err
+	}
+
+	img.decodedImage = tempDecodeImage
+	img.SetDimension(img.decodedImage.Bounds().Max.X, img.decodedImage.Bounds().Max.Y)
+
+	gImage := grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
+
+	finalImage = gImage.Create(transformationFunction)
+	return finalImage, nil
+}
+
+func ColorTransform(transformationFunction RGBATransformation, ipPath string) (*image.RGBA64, error) {
+	var finalImage *image.RGBA64
 	img := &Image{}
 	//Set Path
 	img.path = ipPath
 	//Decode
+	//There is some problem with jpeg images, Extremely lit areas are converted to dark patches
 	tempDecodeImage, err := img.Decode()
 	if err != nil {
-		fmt.Println(err)
-			return nil, err
+		return nil, err
 	}
+
 	img.decodedImage = tempDecodeImage
-
-	//Set Image Dimension
 	img.SetDimension(img.decodedImage.Bounds().Max.X, img.decodedImage.Bounds().Max.Y)
-	//Print a message about Image Dimension
-	fmt.Printf("Applying Transformation %s, Image Resolution is %dx%d\n", transformationName, img.width, img.height)
 
-	var cImage colorImage
-	var gImage grayImage
+	cImage := colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
+	finalImage = cImage.Create(transformationFunction)
 
-	switch transformationName {
-	case BASIC:
-		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(basic)
-	case BASICIMPROVED:
-		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(basicImproved)
-	case DESATURATION:
-		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(desaturation)
-	case DECOMPOSITIONMAX:
-		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(decompositionMax)
-	case DECOMPOSITIONMIN:
-		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(decompositionMin)
-	case SINGLERED:
-		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(singleChannelRed)
-	case SINGLEGREEN:
-		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(singleChannelGreen)
-	case SINGLEBLUE:
-		gImage = grayImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = gImage.Create(singleChannelBlue)
-	case REDONLYFILTER:
-		cImage = colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = cImage.Create(redFilter)
-	case GREENONLYFILTER:
-		cImage = colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = cImage.Create(greenFilter)
-	case BLUEONLYFILTER:
-		cImage = colorImage{Image{img.path, img.width, img.height, img.decodedImage}}
-		finalImage = cImage.Create(blueFilter)
-	}
-
-	return finalImage.(image.Image), nil
+	return finalImage, nil
 }
 
-func (gImage *grayImage) Create(transformationFunction func(r, g, b, a uint32) color.Gray16) *image.Gray16 {
+func (gImage *grayImage) Create(transformationFunction Gray16Transformation) *image.Gray16 {
 	newGrayImage := image.NewGray16(image.Rectangle{image.Point{0, 0}, image.Point{gImage.width, gImage.height}})
 
 	gImage.applyTransformation(newGrayImage, transformationFunction)
 	return newGrayImage
 }
 
-func (cImage *colorImage) Create(transformationFunction func(r, g, b, a uint32) color.RGBA64) *image.RGBA64 {
+func (cImage *colorImage) Create(transformationFunction RGBATransformation) *image.RGBA64 {
 	newColorImage := image.NewRGBA64(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 	newGrayImage := image.NewGray16(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 	finalImage := image.NewRGBA64(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
@@ -149,25 +114,25 @@ func (cImage *colorImage) Create(transformationFunction func(r, g, b, a uint32) 
 	return finalImage
 }
 
-func (img *grayImage) applyTransformation(grayImage *image.Gray16, avgFunction func(r, g, b, a uint32) color.Gray16) {
+func (img *grayImage) applyTransformation(grayImage *image.Gray16, transformationFunction Gray16Transformation) {
 	for i := 0; i <= img.width; i++ {
 		for j := 0; j <= img.height; j++ {
 			point := img.decodedImage.At(i, j)
 			r, g, b, a := point.RGBA()
-			grayColor := avgFunction(r, g, b, a)
+			grayColor := transformationFunction(r, g, b, a)
 			grayImage.Set(i, j, grayColor)
 		}
 	}
 }
 
-func (img *colorImage) applyTransformation(colorImage *image.RGBA64, grayImage *image.Gray16, transformationFunction func(r, g, b, a uint32) color.RGBA64) {
+func (img *colorImage) applyTransformation(colorImage *image.RGBA64, grayImage *image.Gray16, transformationFunction RGBATransformation) {
 	for i := 0; i <= img.width; i++ {
 		for j := 0; j <= img.height; j++ {
 			point := img.decodedImage.At(i, j)
 			r, g, b, a := point.RGBA()
 
 			pixelColor := transformationFunction(r, g, b, a)
-			grayColor := basicImproved(r, g, b, a)
+			grayColor := ImprovedGrayscale(r, g, b, a)
 			grayImage.SetGray16(i, j, grayColor)
 			colorImage.SetRGBA64(i, j, pixelColor)
 		}
@@ -240,28 +205,28 @@ func (img *Image) Save(SaveDir string, finalImage image.Image, shouldCreateDir b
 	png.Encode(outfile, finalImage)
 }
 
-func basic(r, g, b, _ uint32) color.Gray16 {
+func BasicGrayscale(r, g, b, _ uint32) color.Gray16 {
 	avg := float64((r + g + b) / 3)
 
 	return color.Gray16{uint16(math.Ceil(avg))}
 }
 
-func basicImproved(r, g, b, _ uint32) color.Gray16 {
+func ImprovedGrayscale(r, g, b, _ uint32) color.Gray16 {
 	avg := float64(0.3)*float64(r) + float64(0.59)*float64(g) + float64(0.11)*float64(b)
 
 	return color.Gray16{uint16(math.Ceil(avg))}
 }
 
-func desaturation(r, g, b, a uint32) color.Gray16 {
+func Desaturation(r, g, b, a uint32) color.Gray16 {
 	avg := float64(maxOfThree(r, g, b, a)+minOfThree(r, g, b, a)) / 2
 	return color.Gray16{uint16(math.Ceil(avg))}
 }
 
-func decompositionMax(r, g, b, a uint32) color.Gray16 {
+func DecompositionMax(r, g, b, a uint32) color.Gray16 {
 	return color.Gray16{uint16(math.Ceil(float64(maxOfThree(r, g, b, a))))}
 }
 
-func decompositionMin(r, g, b, a uint32) color.Gray16 {
+func DecompositionMin(r, g, b, a uint32) color.Gray16 {
 	return color.Gray16{uint16(math.Ceil(float64(minOfThree(r, g, b, a))))}
 }
 
@@ -274,19 +239,19 @@ func minOfThree(r, g, b, _ uint32) uint32 {
 }
 
 // This is how, I'll do it, Until I figure out a better way
-func singleChannelRed(r, _, _, _ uint32) color.Gray16 {
+func SingleChannelRed(r, _, _, _ uint32) color.Gray16 {
 	return color.Gray16{uint16(math.Ceil(float64(r)))}
 }
 
-func singleChannelGreen(r, _, _, _ uint32) color.Gray16 {
+func SingleChannelGreen(r, _, _, _ uint32) color.Gray16 {
 	return color.Gray16{uint16(math.Ceil(float64(r)))}
 }
 
-func singleChannelBlue(r, _, _, _ uint32) color.Gray16 {
+func SingleChannelBlue(r, _, _, _ uint32) color.Gray16 {
 	return color.Gray16{uint16(math.Ceil(float64(r)))}
 }
 
-func redFilter(r, g, b, a uint32) color.RGBA64 {
+func RedFilter(r, g, b, a uint32) color.RGBA64 {
 
 	if !(r > b) || !(r > g) {
 		return color.RGBA64{uint16(255), uint16(255), uint16(255), uint16(0)}
@@ -295,7 +260,7 @@ func redFilter(r, g, b, a uint32) color.RGBA64 {
 	return color.RGBA64{uint16(r), uint16(g), uint16(b), uint16(a)}
 }
 
-func greenFilter(r, g, b, a uint32) color.RGBA64 {
+func GreenFilter(r, g, b, a uint32) color.RGBA64 {
 	if !(g > r) || !(g > b) {
 		return color.RGBA64{uint16(255), uint16(255), uint16(255), uint16(0)}
 	}
@@ -303,7 +268,7 @@ func greenFilter(r, g, b, a uint32) color.RGBA64 {
 	return color.RGBA64{uint16(r), uint16(g), uint16(b), uint16(a)}
 }
 
-func blueFilter(r, g, b, a uint32) color.RGBA64 {
+func BlueFilter(r, g, b, a uint32) color.RGBA64 {
 	if !(b > g) || !(b > r) {
 		return color.RGBA64{uint16(255), uint16(255), uint16(255), uint16(0)}
 	}

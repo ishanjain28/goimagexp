@@ -8,25 +8,11 @@ import (
 	"log"
 	"os"
 	"sync"
-	"time"
 )
 
 var wg sync.WaitGroup
 
 func main() {
-	str := []string{
-		imagexp.DESATURATION,
-		imagexp.BASIC,
-		imagexp.BASICIMPROVED,
-		imagexp.SINGLEBLUE,
-		imagexp.SINGLEGREEN,
-		imagexp.SINGLERED,
-		imagexp.REDONLYFILTER,
-		imagexp.GREENONLYFILTER,
-		imagexp.BLUEONLYFILTER,
-		imagexp.DECOMPOSITIONMAX,
-		imagexp.DECOMPOSITIONMIN,
-	}
 
 	imgPath := ""
 	fmt.Printf("Enter Path to Image: ")
@@ -42,29 +28,14 @@ func main() {
 	if err := scanner.Err(); err != nil {
 		os.Exit(1)
 	}
-
-	for _, v := range str {
-		wg.Add(1)
-		create(v, imgPath)
-	}
-
-	wg.Wait()
-}
-
-func create(v, imgPath string) {
-	image, err := imagexp.TransformImage(v, imgPath)
+	test, err := imagexp.ColorTransform(imagexp.BlueFilter, imgPath)
 	if err != nil {
-		log.Fatalf("Error Occurred: %s\n", err)
-		//Keep the command prompt open for 5 more seconds
-		time.Sleep(5 * time.Second)
+		log.Fatal(err)
 	}
-
-	file, _ := os.Create(v + ".png")
+	file, _ := os.Create("test.png")
 
 	defer file.Close()
 
-	png.Encode(file, image)
-	wg.Done()
+	png.Encode(file, test)
+
 }
-
-
