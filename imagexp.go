@@ -18,6 +18,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 )
 
 type Image struct {
@@ -38,6 +39,9 @@ type colorImage struct {
 type Gray16Transformation func(r, g, b, a uint32) color.Gray16
 
 type RGBATransformation func(r, g, b, a uint32) color.RGBA64
+
+var PARTS int = 500
+var wg sync.WaitGroup
 
 func GrayscaleTransform(transformationFunction Gray16Transformation, ipPath string) (*image.Gray16, error) {
 	var finalImage *image.Gray16
@@ -83,7 +87,23 @@ func ColorTransform(transformationFunction RGBATransformation, ipPath string) (*
 func (gImage *grayImage) Create(transformationFunction Gray16Transformation) *image.Gray16 {
 	newGrayImage := image.NewGray16(image.Rectangle{image.Point{0, 0}, image.Point{gImage.width, gImage.height}})
 
-	gImage.applyTransformation(newGrayImage, transformationFunction)
+	rowPerPart := gImage.height / PARTS
+	remainderRows := gImage.height % PARTS
+	//fmt.Printf("Row Per Part: %d \t Remainder Rows: %d", rowPerPart, remainderRows)
+
+	for j := 0; j < PARTS; j++ {
+		wg.Add(1)
+		startFromRow := rowPerPart * j
+		upToRow := rowPerPart * (j + 1)
+		if j == PARTS-1 {
+			upToRow += remainderRows
+		}
+
+		//fmt.Printf("%d-%d\n", startFromRow, upToRow)
+		go gImage.applyTransformation(startFromRow, upToRow, newGrayImage, transformationFunction)
+	}
+
+	wg.Wait()
 	return newGrayImage
 }
 
@@ -92,42 +112,44 @@ func (cImage *colorImage) Create(transformationFunction RGBATransformation) *ima
 	newGrayImage := image.NewGray16(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 	finalImage := image.NewRGBA64(image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}})
 
-	//rowPerPart := cImage.height / PARTS
-	//remainderRows := cImage.height % PARTS
-	//fmt.Println(rowPerPart, remainderRows)
+	rowPerPart := cImage.height / PARTS
+	remainderRows := cImage.height % PARTS
+	//fmt.Printf("Row Per Part: %d \t Remainder Rows: %d", rowPerPart, remainderRows)
 
-	cImage.applyTransformation(newColorImage, newGrayImage, transformationFunction)
-	//for j := 0; j < PARTS; j++ {
-	//	wg.Add(1)
-	//	startFromRow := partLimit * j
-	//	upToRow := partLimit * (j + 1)
-	//	if j == PARTS-1 {
-	//		upToRow += difference
-	//	}
-	//	go cImage.applyTransformation(startFromRow, upToRow, newColorImageAddress, newGrayImageAddress, redFilter)
-	//}
+	for j := 0; j < PARTS; j++ {
+		wg.Add(1)
+		startFromRow := rowPerPart * j
+		upToRow := rowPerPart * (j + 1)
+		if j == PARTS-1 {
+			upToRow += remainderRows
+		}
 
-	//wg.Wait()
+		//fmt.Printf("%d-%d\n", startFromRow, upToRow)
+		go cImage.applyTransformation(startFromRow, upToRow, newColorImage, newGrayImage, transformationFunction)
+	}
+
+	wg.Wait()
 	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}}, newGrayImage, image.Point{0, 0}, draw.Src)
 	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}}, newColorImage, image.Point{0, 0}, draw.Over)
 
 	return finalImage
 }
 
-func (img *grayImage) applyTransformation(grayImage *image.Gray16, transformationFunction Gray16Transformation) {
+func (img *grayImage) applyTransformation(startFromRow, upToRow int, grayImage *image.Gray16, transformationFunction Gray16Transformation) {
 	for i := 0; i <= img.width; i++ {
-		for j := 0; j <= img.height; j++ {
+		for j := startFromRow; j < upToRow; j++ {
 			point := img.decodedImage.At(i, j)
 			r, g, b, a := point.RGBA()
 			grayColor := transformationFunction(r, g, b, a)
 			grayImage.Set(i, j, grayColor)
 		}
 	}
+	wg.Done()
 }
 
-func (img *colorImage) applyTransformation(colorImage *image.RGBA64, grayImage *image.Gray16, transformationFunction RGBATransformation) {
+func (img *colorImage) applyTransformation(startFromRow, uptoRow int, colorImage *image.RGBA64, grayImage *image.Gray16, transformationFunction RGBATransformation) {
 	for i := 0; i <= img.width; i++ {
-		for j := 0; j <= img.height; j++ {
+		for j := startFromRow; j < uptoRow; j++ {
 			point := img.decodedImage.At(i, j)
 			r, g, b, a := point.RGBA()
 
@@ -137,6 +159,7 @@ func (img *colorImage) applyTransformation(colorImage *image.RGBA64, grayImage *
 			colorImage.SetRGBA64(i, j, pixelColor)
 		}
 	}
+	wg.Done()
 }
 
 func (img *Image) SetDimension(width int, height int) {
