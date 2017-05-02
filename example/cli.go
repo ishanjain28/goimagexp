@@ -25,7 +25,7 @@ func main() {
 	if err := scanner.Err(); err != nil {
 		os.Exit(1)
 	}
-	test, err := imagexp.ColorTransform(imagexp.RedFilter, imgPath)
+	test, err := imagexp.ColorFilter(imagexp.RedFilter, imgPath)
 	if err != nil {
 		log.Fatal(err)
 	}
