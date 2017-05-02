@@ -13,12 +13,10 @@ import (
 	"image/jpeg"
 	"image/png"
 	"log"
-	"math"
 	"os"
 	"path"
 	"strings"
 	"sync"
-	"fmt"
 )
 
 type Image struct {
@@ -97,44 +95,45 @@ func Blur(blurLevel int, ipPath string) (*image.RGBA64, error) {
 	img.SetDimension(img.decodedImage.Bounds().Max.X, img.decodedImage.Bounds().Max.Y)
 
 	var finalImage *image.RGBA64 = image.NewRGBA64(image.Rectangle{image.Point{0, 0}, image.Point{img.width, img.height}})
-	for i := blurLevel; i <= img.width-blurLevel-blurLevel; i += (blurLevel*2 + 1) {
-		for j := blurLevel; j < img.height-blurLevel-blurLevel; j += (blurLevel*2 + 1) {
-			r00, g00, b00, a00 := img.decodedImage.At(i-1, j-1).RGBA()
-			r10, g10, b10, a10 := img.decodedImage.At(i, j-1).RGBA()
-			r20, g20, b20, a20 := img.decodedImage.At(i+1, j-1).RGBA()
 
-			r01, g01, b01, a01 := img.decodedImage.At(i-1, j).RGBA()
-			r11, g11, b11, a11 := img.decodedImage.At(i, j).RGBA()
-			r21, g21, b21, a21 := img.decodedImage.At(i+1, j).RGBA()
-
-			r02, g02, b02, a02 := img.decodedImage.At(i-1, j+1).RGBA()
-			r12, g12, b12, a12 := img.decodedImage.At(i, j+1).RGBA()
-			r22, g22, b22, a22 := img.decodedImage.At(i+1, j+1).RGBA()
-
-			rAvg := math.Ceil(float64(r00+r10+r20+r01+r11+r21+r02+r12+r22) / 9)
-			gAvg := math.Ceil(float64(g00+g10+g20+g01+g11+g21+g02+g12+g22) / 9)
-			bAvg := math.Ceil(float64(b00+b10+b20+b01+b11+b21+b02+b12+b22) / 9)
-			aAvg := math.Ceil(float64(a00+a10+a20+a01+a11+a21+a02+a12+a22) / 9)
-
-			rgbaColor := color.RGBA64{uint16(rAvg), uint16(gAvg), uint16(bAvg), uint16(aAvg)}
-
-			fmt.Println(i, j)
-			fmt.Println(rgbaColor)
-			fmt.Println(img.decodedImage.At(i-1, j-1).RGBA())
-			finalImage.Set(i-1, j-1, rgbaColor)
-			finalImage.Set(i, j-1, rgbaColor)
-			finalImage.Set(i+1, j-1, rgbaColor)
-
-			finalImage.SetRGBA64(i-1, j, rgbaColor)
-			finalImage.SetRGBA64(i, j, rgbaColor)
-			finalImage.SetRGBA64(i+1, j, rgbaColor)
-
-			finalImage.SetRGBA64(i-1, j+1, rgbaColor)
-			finalImage.SetRGBA64(i, j+1, rgbaColor)
-			finalImage.SetRGBA64(i+1, j+1, rgbaColor)
-
-		}
-	}
+	//for i := blurLevel; i <= img.width-blurLevel-blurLevel; i += (blurLevel*2 + 1) {
+	//	for j := blurLevel; j < img.height-blurLevel-blurLevel; j += (blurLevel*2 + 1) {
+	//		r00, g00, b00, a00 := img.decodedImage.At(i-1, j-1).RGBA()
+	//		r10, g10, b10, a10 := img.decodedImage.At(i, j-1).RGBA()
+	//		r20, g20, b20, a20 := img.decodedImage.At(i+1, j-1).RGBA()
+	//
+	//		r01, g01, b01, a01 := img.decodedImage.At(i-1, j).RGBA()
+	//		r11, g11, b11, a11 := img.decodedImage.At(i, j).RGBA()
+	//		r21, g21, b21, a21 := img.decodedImage.At(i+1, j).RGBA()
+	//
+	//		r02, g02, b02, a02 := img.decodedImage.At(i-1, j+1).RGBA()
+	//		r12, g12, b12, a12 := img.decodedImage.At(i, j+1).RGBA()
+	//		r22, g22, b22, a22 := img.decodedImage.At(i+1, j+1).RGBA()
+	//
+	//		rAvg := math.Ceil(float64(r00+r10+r20+r01+r11+r21+r02+r12+r22) / 9)
+	//		gAvg := math.Ceil(float64(g00+g10+g20+g01+g11+g21+g02+g12+g22) / 9)
+	//		bAvg := math.Ceil(float64(b00+b10+b20+b01+b11+b21+b02+b12+b22) / 9)
+	//		aAvg := math.Ceil(float64(a00+a10+a20+a01+a11+a21+a02+a12+a22) / 9)
+	//
+	//		rgbaColor := color.RGBA64{uint16(rAvg), uint16(gAvg), uint16(bAvg), uint16(aAvg)}
+	//
+	//		fmt.Println(i, j)
+	//		fmt.Println(rgbaColor)
+	//		fmt.Println(img.decodedImage.At(i-1, j-1).RGBA())
+	//		finalImage.Set(i-1, j-1, rgbaColor)
+	//		finalImage.Set(i, j-1, rgbaColor)
+	//		finalImage.Set(i+1, j-1, rgbaColor)
+	//
+	//		finalImage.SetRGBA64(i-1, j, rgbaColor)
+	//		finalImage.SetRGBA64(i, j, rgbaColor)
+	//		finalImage.SetRGBA64(i+1, j, rgbaColor)
+	//
+	//		finalImage.SetRGBA64(i-1, j+1, rgbaColor)
+	//		finalImage.SetRGBA64(i, j+1, rgbaColor)
+	//		finalImage.SetRGBA64(i+1, j+1, rgbaColor)
+	//
+	//	}
+	//}
 
 	return finalImage, nil
 }
@@ -185,7 +184,7 @@ func (cImage *colorImage) Create(transformationFunction RGBATransformation) *ima
 	wg.Wait()
 	//Wait Until All Routines are done.
 	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}}, newGrayImage, image.Point{0, 0}, draw.Src)
-	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}}, newColorImage, image.Point{100, 100}, draw.Over)
+	draw.Draw(finalImage, image.Rectangle{image.Point{0, 0}, image.Point{cImage.width, cImage.height}}, newColorImage, image.Point{0, 0}, draw.Over)
 	return finalImage
 }
 
@@ -264,7 +263,6 @@ func (img *Image) Decode() (image.Image, error) {
 func (img *Image) Save(SaveDir string, finalImage image.Image, shouldCreateDir bool) {
 	destFileName := path.Base(img.path)
 	destFileName = strings.Replace(destFileName, path.Ext(img.path), "", -1)
-	//fileExtension := path.Ext(img.srcPath)
 	SaveDir = strings.Replace(SaveDir, " ", "", -1)
 
 	if shouldCreateDir {
@@ -280,90 +278,3 @@ func (img *Image) Save(SaveDir string, finalImage image.Image, shouldCreateDir b
 
 	png.Encode(outfile, finalImage)
 }
-
-func BasicGrayscale(r, g, b, _ uint32) color.Gray16 {
-	avg := float64((r + g + b) / 3)
-
-	return color.Gray16{uint16(math.Ceil(avg))}
-}
-
-func ImprovedGrayscale(r, g, b, _ uint32) color.Gray16 {
-	avg := float64(0.3)*float64(r) + float64(0.59)*float64(g) + float64(0.11)*float64(b)
-
-	return color.Gray16{uint16(math.Ceil(avg))}
-}
-
-func Desaturation(r, g, b, a uint32) color.Gray16 {
-	avg := float64(maxOfThree(r, g, b, a)+minOfThree(r, g, b, a)) / 2
-	return color.Gray16{uint16(math.Ceil(avg))}
-}
-
-func DecompositionMax(r, g, b, a uint32) color.Gray16 {
-	return color.Gray16{uint16(math.Ceil(float64(maxOfThree(r, g, b, a))))}
-}
-
-func DecompositionMin(r, g, b, a uint32) color.Gray16 {
-	return color.Gray16{uint16(math.Ceil(float64(minOfThree(r, g, b, a))))}
-}
-
-func maxOfThree(r, g, b, _ uint32) uint32 {
-	return Max(Max(r, g), b)
-}
-
-func minOfThree(r, g, b, _ uint32) uint32 {
-	return Min(Min(r, g), b)
-}
-
-// This is how, I'll do it, Until I figure out a better way
-func SingleChannelRed(r, _, _, _ uint32) color.Gray16 {
-	return color.Gray16{uint16(math.Ceil(float64(r)))}
-}
-
-func SingleChannelGreen(r, _, _, _ uint32) color.Gray16 {
-	return color.Gray16{uint16(math.Ceil(float64(r)))}
-}
-
-func SingleChannelBlue(r, _, _, _ uint32) color.Gray16 {
-	return color.Gray16{uint16(math.Ceil(float64(r)))}
-}
-
-func RedFilter(r, g, b, a uint32) color.RGBA64 {
-
-	if !(r > b) || !(r > g) {
-		return color.RGBA64{uint16(255), uint16(255), uint16(255), uint16(0)}
-	}
-
-	return color.RGBA64{uint16(r), uint16(g), uint16(b), uint16(a)}
-}
-
-func GreenFilter(r, g, b, a uint32) color.RGBA64 {
-	if !(g > r) || !(g > b) {
-		return color.RGBA64{uint16(255), uint16(255), uint16(255), uint16(0)}
-	}
-
-	return color.RGBA64{uint16(r), uint16(g), uint16(b), uint16(a)}
-}
-
-func BlueFilter(r, g, b, a uint32) color.RGBA64 {
-	if !(b > g) || !(b > r) {
-		return color.RGBA64{uint16(255), uint16(255), uint16(255), uint16(0)}
-	}
-
-	return color.RGBA64{uint16(r), uint16(g), uint16(b), uint16(a)}
-}
-
-//func (cImage *Image) applyTransformation(startFromRow, upToRow int, colorImage **image.RGBA64, grayImage **image.Gray16, transformationFunction func(r, g, b, a uint32) color.RGBA64) {
-//	for i := startFromRow; i <= upToRow; i++ {
-//		for j := 0; j <= cImage.width; j++ {
-//			point := cImage.decodedImage.At(i, j)
-//			r, g, b, a := point.RGBA()
-//
-//			pixelColor := transformationFunction(r, g, b, a)
-//			grayAVG := basicImproved(r, g, b)
-//			grayColor := color.Gray16{uint16(math.Ceil(grayAVG))}
-//			(*grayImage).SetGray16(i, j, grayColor)
-//			(*colorImage).SetRGBA64(i, j, pixelColor)
-//		}
-//	}
-//	wg.Done()
-//}
